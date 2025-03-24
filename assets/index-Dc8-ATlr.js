@@ -1,6 +1,13 @@
 var __defProp = Object.defineProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
+var _MainController_instances, openModal_fn;
 (function polyfill() {
   const relList = document.createElement("link").relList;
   if (relList && relList.supports && relList.supports("modulepreload")) {
@@ -62,49 +69,6 @@ const ERROR_MESSAGE = {
   46: "API가 유지보수 중입니다. 나중에 다시 시도하세요.",
   47: "입력이 올바르지 않습니다."
 };
-class HeaderController {
-  constructor({
-    renderSearchMovieList,
-    renderMovieList
-  }) {
-    __publicField(this, "searchBarElement");
-    __publicField(this, "headerLogoElement");
-    this.searchBarElement = document.querySelector(
-      ".search-bar"
-    );
-    this.headerLogoElement = document.querySelector(
-      ".header-wrapper .logo"
-    );
-    this.bindSearchEvent(renderSearchMovieList);
-    this.bindHomeLogoEvent(renderMovieList);
-  }
-  bindSearchEvent(renderSearchMovieList) {
-    this.searchBarElement.addEventListener(
-      "submit",
-      async (event) => {
-        var _a;
-        event.preventDefault();
-        const formElement = event.target;
-        const target = formElement.querySelector("input");
-        const searchValue = target.value;
-        (_a = document.querySelector(".background-container")) == null ? void 0 : _a.classList.add("search");
-        renderSearchMovieList(searchValue);
-      }
-    );
-  }
-  bindHomeLogoEvent(renderMovieList) {
-    var _a;
-    (_a = this.headerLogoElement) == null ? void 0 : _a.addEventListener("click", () => {
-      var _a2;
-      renderMovieList();
-      (_a2 = document.querySelector(".background-container")) == null ? void 0 : _a2.classList.remove("search");
-      const inputElement = this.searchBarElement.querySelector(
-        "input"
-      );
-      inputElement.value = "";
-    });
-  }
-}
 const createDOMElement = ({
   tag,
   children,
@@ -141,6 +105,138 @@ const createDOMElement = ({
   }
   return element;
 };
+const BackgroundThumbnailSection = (movie) => {
+  return createDOMElement({
+    tag: "div",
+    class: "background-container",
+    children: [
+      createDOMElement({
+        tag: "img",
+        class: "background-thumbnail",
+        src: `https://media.themoviedb.org/t/p/w440_and_h660_face${movie.backdrop_path}`
+      }),
+      createDOMElement({
+        tag: "div",
+        class: "overlay",
+        "aria-hidden": "true"
+      }),
+      createDOMElement({
+        tag: "div",
+        class: "top-rated-container",
+        children: createDOMElement({
+          tag: "div",
+          class: "top-rated-movie",
+          children: [
+            createDOMElement({
+              tag: "div",
+              class: "rate",
+              children: [
+                createDOMElement({
+                  tag: "img",
+                  class: "star",
+                  src: "./images/star_empty.png"
+                }),
+                createDOMElement({
+                  tag: "span",
+                  class: "rate-value",
+                  textContent: movie.vote_average
+                })
+              ]
+            }),
+            createDOMElement({
+              tag: "div",
+              class: "title",
+              textContent: movie.title
+            }),
+            createDOMElement({
+              tag: "button",
+              class: "primary detail",
+              textContent: "자세히 보기"
+            })
+          ]
+        })
+      })
+    ]
+  });
+};
+const SkeletonBackgroundThumbnailSection = () => {
+  return createDOMElement({
+    tag: "div",
+    class: "background-container skeleton"
+  });
+};
+class BackgroundThumbnailController {
+  constructor({ openModal }) {
+    __publicField(this, "openModal");
+    __publicField(this, "backgroundElement");
+    this.openModal = openModal;
+  }
+  renderSkeleton() {
+    this.backgroundElement = SkeletonBackgroundThumbnailSection();
+    const headerElement = document.querySelector("header");
+    headerElement == null ? void 0 : headerElement.insertAdjacentElement("afterend", this.backgroundElement);
+  }
+  renderBackgroundThumbnail(movie) {
+    const backgroundThumbnailSectionElement = BackgroundThumbnailSection(movie);
+    this.backgroundElement.replaceWith(backgroundThumbnailSectionElement);
+    this.backgroundElement = backgroundThumbnailSectionElement;
+    this.bindEvents();
+  }
+  bindEvents() {
+    const detailButtonElement = this.backgroundElement.querySelector(
+      "button.detail"
+    );
+    detailButtonElement.addEventListener(
+      "click",
+      () => this.openModal("아직 지원되지 않은 기능입니다.")
+    );
+  }
+  hideBackground() {
+    this.backgroundElement.classList.add("search");
+  }
+  showBackground() {
+    this.backgroundElement.classList.remove("search");
+  }
+}
+class HeaderController {
+  constructor({
+    renderSearchMovieList,
+    renderMovieList
+  }) {
+    __publicField(this, "searchBarElement");
+    __publicField(this, "headerLogoElement");
+    this.searchBarElement = document.querySelector(
+      ".search-bar"
+    );
+    this.headerLogoElement = document.querySelector(
+      ".header-wrapper .logo"
+    );
+    this.bindSearchEvent(renderSearchMovieList);
+    this.bindHomeLogoEvent(renderMovieList);
+  }
+  bindSearchEvent(renderSearchMovieList) {
+    this.searchBarElement.addEventListener(
+      "submit",
+      async (event) => {
+        event.preventDefault();
+        const formElement = event.target;
+        const target = formElement.querySelector("input");
+        const searchValue = target.value;
+        renderSearchMovieList(searchValue);
+      }
+    );
+  }
+  bindHomeLogoEvent(renderMovieList) {
+    var _a;
+    (_a = this.headerLogoElement) == null ? void 0 : _a.addEventListener("click", () => {
+      renderMovieList();
+      const inputElement = this.searchBarElement.querySelector(
+        "input"
+      );
+      inputElement.value = "";
+    });
+  }
+}
 const MessageModal = (message) => {
   return createDOMElement({
     tag: "dialog",
@@ -163,8 +259,9 @@ const MessageModal = (message) => {
     ]
   });
 };
+const mainElement = document.querySelector("main");
 class MessageModalController {
-  constructor(mainElement) {
+  constructor() {
     __publicField(this, "mainElement");
     __publicField(this, "messageModalElement");
     this.mainElement = mainElement;
@@ -223,60 +320,6 @@ const baseApi = async (path, query) => {
 const getPopularMovieResult = async (page) => {
   const movieResult = await baseApi("/movie/popular", { page });
   return movieResult;
-};
-const BackgroundThumbnailSection = (movie) => {
-  return createDOMElement({
-    tag: "div",
-    class: "background-container",
-    children: [
-      createDOMElement({
-        tag: "img",
-        class: "background-thumbnail",
-        src: `https://media.themoviedb.org/t/p/w440_and_h660_face${movie.backdrop_path}`
-      }),
-      createDOMElement({
-        tag: "div",
-        class: "overlay",
-        "aria-hidden": "true"
-      }),
-      createDOMElement({
-        tag: "div",
-        class: "top-rated-container",
-        children: createDOMElement({
-          tag: "div",
-          class: "top-rated-movie",
-          children: [
-            createDOMElement({
-              tag: "div",
-              class: "rate",
-              children: [
-                createDOMElement({
-                  tag: "img",
-                  class: "star",
-                  src: "./images/star_empty.png"
-                }),
-                createDOMElement({
-                  tag: "span",
-                  class: "rate-value",
-                  textContent: movie.vote_average
-                })
-              ]
-            }),
-            createDOMElement({
-              tag: "div",
-              class: "title",
-              textContent: movie.title
-            }),
-            createDOMElement({
-              tag: "button",
-              class: "primary detail",
-              textContent: "자세히 보기"
-            })
-          ]
-        })
-      })
-    ]
-  });
 };
 const defaultImage = "/javascript-movie-review/assets/default_poster_image-COpmb5GC.png";
 const MovieItem = (movie) => {
@@ -348,12 +391,6 @@ const MovieListSection = ({
     ]
   });
 };
-const SkeletonBackgroundThumbnailSection = () => {
-  return createDOMElement({
-    tag: "div",
-    class: "background-container skeleton"
-  });
-};
 const SkeletonMovieItem = () => {
   return createDOMElement({
     tag: "div",
@@ -384,7 +421,7 @@ const MovieResults = () => {
     movieList.push(...list);
     page = newPage;
   };
-  const initialTotalPage = (totalPage) => {
+  const initializeTotalPage = (totalPage) => {
     maxPage = totalPage;
   };
   return {
@@ -392,20 +429,22 @@ const MovieResults = () => {
     getPage: () => page,
     hasMore: () => page !== maxPage,
     addMovieList,
-    initialTotalPage
+    initializeTotalPage
   };
 };
 class MovieListController {
   constructor({
-    mainElement,
-    openModal
+    renderBackgroundThumbnailSkeleton,
+    renderBackgroundThumbnail
   }) {
     __publicField(this, "movieResults");
     __publicField(this, "mainElement");
-    __publicField(this, "openModal");
+    __publicField(this, "renderBackgroundThumbnailSkeleton");
+    __publicField(this, "renderBackgroundThumbnail");
     this.movieResults = MovieResults();
     this.mainElement = mainElement;
-    this.openModal = openModal;
+    this.renderBackgroundThumbnailSkeleton = renderBackgroundThumbnailSkeleton;
+    this.renderBackgroundThumbnail = renderBackgroundThumbnail;
   }
   bindEvents() {
     const seeMoreElement = this.mainElement.querySelector(".see-more");
@@ -420,34 +459,27 @@ class MovieListController {
       results: movieList
     } = await getPopularMovieResult(page);
     this.movieResults.addMovieList(newPage, movieList);
-    this.movieResults.initialTotalPage(totalPage);
+    this.movieResults.initializeTotalPage(totalPage);
     return { movieList, hasMore: newPage !== totalPage };
   }
   async render() {
-    const skeletonBackgroundElement = this.renderSkeleton();
+    this.renderSkeleton();
+    this.renderBackgroundThumbnailSkeleton();
     const { movieList, hasMore } = await this.fetchAndStoreMovies();
     this.renderMovieList({
       movieList,
-      hasMore,
-      skeletonBackgroundElement
+      hasMore
     });
+    this.renderBackgroundThumbnail(movieList[0]);
     this.bindEvents();
   }
   renderSkeleton() {
-    var _a;
     const skeletonSectionElement = SkeletonMovieListSection();
     this.mainElement.replaceChildren(skeletonSectionElement);
-    const skeletonBackgroundElement = SkeletonBackgroundThumbnailSection();
-    (_a = this.mainElement) == null ? void 0 : _a.insertAdjacentElement(
-      "beforebegin",
-      skeletonBackgroundElement
-    );
-    return skeletonBackgroundElement;
   }
   renderMovieList({
     movieList,
-    hasMore,
-    skeletonBackgroundElement
+    hasMore
   }) {
     const sectionElement = MovieListSection({
       title: "지금 인기 있는 영화",
@@ -455,26 +487,6 @@ class MovieListController {
       hasMore
     });
     this.mainElement.replaceChildren(sectionElement);
-    const backgroundThumbnailSectionElement = BackgroundThumbnailSection(
-      movieList[0]
-    );
-    skeletonBackgroundElement.replaceWith(backgroundThumbnailSectionElement);
-    const detailButtonElement = backgroundThumbnailSectionElement.querySelector(
-      "button.detail"
-    );
-    detailButtonElement.addEventListener(
-      "click",
-      () => this.openModal("아직 지원되지 않은 기능입니다.")
-    );
-  }
-  renderBackgroundSection() {
-    var _a;
-    const skeletonBackgroundElement = SkeletonBackgroundThumbnailSection();
-    (_a = this.mainElement) == null ? void 0 : _a.insertAdjacentElement(
-      "beforebegin",
-      skeletonBackgroundElement
-    );
-    return skeletonBackgroundElement;
   }
   async renderExistingMovieList() {
     const movieList = this.movieResults.getMovieList();
@@ -495,16 +507,12 @@ class MovieListController {
       { length: 20 },
       () => SkeletonMovieItem()
     );
-    skeletonElements.forEach(
-      (skeleton) => movieListContainer.appendChild(skeleton)
-    );
+    movieListContainer.append(...skeletonElements);
     const { movieList, hasMore } = await this.fetchAndStoreMovies(
       this.movieResults.getPage() + 1
     );
     skeletonElements.forEach((skeleton) => skeleton.remove());
-    movieList.forEach(
-      (movie) => movieListContainer.appendChild(MovieItem(movie))
-    );
+    movieListContainer.append(...movieList.map((movie) => MovieItem(movie)));
     if (!hasMore) (_a = this.mainElement.querySelector(".see-more")) == null ? void 0 : _a.remove();
   }
 }
@@ -542,7 +550,7 @@ const MovieEmptySection = (title) => {
   });
 };
 class SearchMovieListController {
-  constructor(mainElement, searchText) {
+  constructor(searchText) {
     __publicField(this, "mainElement");
     __publicField(this, "searchText");
     __publicField(this, "page", 0);
@@ -603,48 +611,60 @@ class SearchMovieListController {
       { length: 20 },
       () => SkeletonMovieItem()
     );
-    skeletonElements.forEach((skeletonElement) => {
-      movieListContainer == null ? void 0 : movieListContainer.appendChild(skeletonElement);
-    });
+    movieListContainer == null ? void 0 : movieListContainer.append(...skeletonElements);
     const { movieList, hasMore } = await this.fetchMovies();
-    skeletonElements.forEach((skeletonElement) => {
-      skeletonElement.remove();
-    });
-    movieList.forEach((movie) => {
-      movieListContainer == null ? void 0 : movieListContainer.appendChild(MovieItem(movie));
-    });
+    skeletonElements.forEach((skeleton) => skeleton.remove());
+    movieListContainer == null ? void 0 : movieListContainer.append(...movieList.map((movie) => MovieItem(movie)));
     if (!hasMore) (_a = this.mainElement.querySelector(".see-more")) == null ? void 0 : _a.remove();
   }
 }
-class MainController {
+const _MainController = class _MainController {
   constructor() {
-    __publicField(this, "mainElement");
+    __privateAdd(this, _MainController_instances);
+    __publicField(this, "backgroundThumbnailController");
     __publicField(this, "messageModalController");
     __publicField(this, "movieListController");
-    this.mainElement = document.querySelector("main");
-    this.messageModalController = new MessageModalController(this.mainElement);
+    this.messageModalController = new MessageModalController();
+    this.backgroundThumbnailController = new BackgroundThumbnailController({
+      openModal: __privateMethod(this, _MainController_instances, openModal_fn).bind(this)
+    });
     this.movieListController = new MovieListController({
-      mainElement: this.mainElement,
-      openModal: (text) => {
-        this.messageModalController.changeContentMessage(text);
-        this.messageModalController.messageModalElement.showModal();
+      renderBackgroundThumbnailSkeleton: () => {
+        this.backgroundThumbnailController.renderSkeleton();
+      },
+      renderBackgroundThumbnail: (movie) => {
+        this.backgroundThumbnailController.renderBackgroundThumbnail(movie);
       }
     });
     new HeaderController({
-      renderSearchMovieList: (searchValue) => new SearchMovieListController(this.mainElement, searchValue),
-      renderMovieList: () => this.movieListController.renderExistingMovieList()
+      renderSearchMovieList: (searchValue) => {
+        this.backgroundThumbnailController.hideBackground();
+        new SearchMovieListController(searchValue);
+      },
+      renderMovieList: () => {
+        this.backgroundThumbnailController.showBackground();
+        this.movieListController.renderExistingMovieList();
+      }
     });
+    if (_MainController.instance) {
+      return _MainController.instance;
+    }
+    _MainController.instance = this;
   }
   async render() {
     try {
       await this.movieListController.render();
     } catch (error) {
-      this.messageModalController.changeContentMessage(
-        ERROR_MESSAGE[Number(error.message)] || "알 수 없는 오류가 발생했습니다."
-      );
-      this.messageModalController.messageModalElement.showModal();
+      __privateMethod(this, _MainController_instances, openModal_fn).call(this, ERROR_MESSAGE[Number(error.message)] || "알 수 없는 오류가 발생했습니다.");
     }
   }
-}
+};
+_MainController_instances = new WeakSet();
+openModal_fn = function(text) {
+  this.messageModalController.changeContentMessage(text);
+  this.messageModalController.messageModalElement.showModal();
+};
+__publicField(_MainController, "instance");
+let MainController = _MainController;
 const main = new MainController();
 main.render();
