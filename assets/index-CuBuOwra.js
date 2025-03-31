@@ -71,6 +71,7 @@ const ERROR_MESSAGE = {
   46: "API가 유지보수 중입니다. 나중에 다시 시도하세요.",
   47: "입력이 올바르지 않습니다."
 };
+const scrollToTop = () => window.scrollTo(0, 0);
 function $(selector, element = document) {
   return element.querySelector(selector);
 }
@@ -1069,6 +1070,7 @@ const _MainController = class _MainController {
     __publicField(this, "searchMovieListController");
     __publicField(this, "messageModalController");
     __publicField(this, "detailModalController");
+    scrollToTop();
     this.messageModalController = new MessageModalController();
     this.detailModalController = new DetailModalController({
       onErrorModalOpen: __privateMethod(this, _MainController_instances, onErrorModalOpen_fn).bind(this)
@@ -1110,6 +1112,7 @@ const _MainController = class _MainController {
 };
 _MainController_instances = new WeakSet();
 onSearchKeywordSubmit_fn = async function(searchValue) {
+  scrollToTop();
   try {
     this.backgroundThumbnailController.hideBackground();
     this.movieListController.removeScrollEvent();
@@ -1119,6 +1122,7 @@ onSearchKeywordSubmit_fn = async function(searchValue) {
   }
 };
 onHomeLogoClick_fn = function() {
+  scrollToTop();
   this.backgroundThumbnailController.showBackground();
   this.searchMovieListController.removeScrollEvent();
   this.movieListController.renderExistingMovieList();
@@ -1128,6 +1132,5 @@ onErrorModalOpen_fn = function(error) {
 };
 __publicField(_MainController, "instance");
 let MainController = _MainController;
-window.scrollTo(0, 0);
 const main = new MainController();
 main.render();
